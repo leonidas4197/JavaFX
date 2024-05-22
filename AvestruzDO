@@ -1,0 +1,137 @@
+package Model;
+
+public class AvestruzDO {
+
+	private int idAvestruz;
+	private String Nombre;
+	private String NickGuerra;
+	private int Edad;
+	private int Altura;
+	private int NivelMalaLeche;
+	private int NumHuevos;
+	
+	/**
+	 * 
+	 * @param idAvestruz
+	 * @param Nombre
+	 * @param NickGuerra
+	 * @param Edad
+	 * @param Altura
+	 * @param NivelMalaLeche
+	 * @param NumHuevos
+	 */
+	
+	public AvestruzDO(int idAvestruz, String Nombre, String NickGuerra, int Edad, int Altura,
+			int NivelMalaLeche, int NumHuevos) {
+		super();
+		this.idAvestruz = idAvestruz;
+		this.Nombre = Nombre;
+		this.NickGuerra = NickGuerra;
+		this.Edad = Edad;
+		this.Altura= Altura;
+		this.NivelMalaLeche= NivelMalaLeche;
+		this.NumHuevos= NumHuevos;
+	}
+
+	/**
+	 * @return the idAvestruz
+	 */
+	public int getIdAvestruz() {
+		return idAvestruz;
+	}
+
+	/**
+	 * @return the nombre
+	 */
+	public String getNombre() {
+		return Nombre;
+	}
+
+	/**
+	 * @return the nickGuerra
+	 */
+	public String getNickGuerra() {
+		return NickGuerra;
+	}
+
+	/**
+	 * @return the edad
+	 */
+	public int getEdad() {
+		return Edad;
+	}
+
+	/**
+	 * @return the altura
+	 */
+	public int getAltura() {
+		return Altura;
+	}
+
+	/**
+	 * @return the nivelMalaLeche
+	 */
+	public int getNivelMalaLeche() {
+		return NivelMalaLeche;
+	}
+
+	/**
+	 * @return the numHuevos
+	 */
+	public int getNumHuevos() {
+		return NumHuevos;
+	}
+
+	/**
+	 * @param idAvestruz the idAvestruz to set
+	 */
+	public void setIdAvestruz(int idAvestruz) {
+		this.idAvestruz = idAvestruz;
+	}
+
+	/**
+	 * @param nombre the nombre to set
+	 */
+	public void setNombre(String nombre) {
+		Nombre = nombre;
+	}
+
+	/**
+	 * @param nickGuerra the nickGuerra to set
+	 */
+	public void setNickGuerra(String nickGuerra) {
+		NickGuerra = nickGuerra;
+	}
+
+	/**
+	 * @param edad the edad to set
+	 */
+	public void setEdad(int edad) {
+		Edad = edad;
+	}
+
+	/**
+	 * @param altura the altura to set
+	 */
+	public void setAltura(int altura) {
+		Altura = altura;
+	}
+
+	/**
+	 * @param nivelMalaLeche the nivelMalaLeche to set
+	 */
+	public void setNivelMalaLeche(int nivelMalaLeche) {
+		NivelMalaLeche = nivelMalaLeche;
+	}
+
+	/**
+	 * @param numHuevos the numHuevos to set
+	 */
+	public void setNumHuevos(int numHuevos) {
+		NumHuevos = numHuevos;
+	}
+	
+	
+}
+
+
