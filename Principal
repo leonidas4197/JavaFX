@@ -1,0 +1,282 @@
+package org.openjfx.ExamenFX;
+
+import Utils.UtilsBD;
+import Model.AvestruzDO;
+import Model.KoalaDO;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Principal extends Application {
+
+    private ChoiceBox<AvestruzDO> avestruzChoiceBox; // Declaración del ChoiceBox como un campo de clase
+    private TabPane tabPane; // Declarar TabPane como un campo de clase
+
+    @Override
+    public void start(Stage primaryStage) {
+        try {
+            primaryStage.setTitle("Avestruces Selector");
+
+            // Crear la barra de menú
+            MenuBar menuBar = new MenuBar();
+
+            // Menú Archivo
+            Menu menuFile = new Menu("Archivo");
+            MenuItem cargarMenuItem = new MenuItem("Cargar");
+            MenuItem salirMenuItem = new MenuItem("Salir");
+            menuFile.getItems().addAll(cargarMenuItem, new SeparatorMenuItem(), salirMenuItem);
+
+            // Menú Avestruz
+            Menu menuAvestruz = new Menu("Avestruces");
+            MenuItem eliminarMenuItem = new MenuItem("Eliminar");
+            menuAvestruz.getItems().addAll(eliminarMenuItem);
+
+            // Menú Koalas
+            Menu menuKoalas = new Menu("Koalas");
+            MenuItem mostrarDatosMenuItem = new MenuItem("Mostrar Datos");
+            menuKoalas.getItems().addAll(mostrarDatosMenuItem);
+
+            menuBar.getMenus().addAll(menuFile, menuAvestruz, menuKoalas);
+
+            // Crear el ChoiceBox y Label para Avestruz
+            Label avestruzLabel = new Label("Avestruz:");
+            avestruzChoiceBox = new ChoiceBox<>(); // Inicialización del ChoiceBox
+
+            // Layout para el ChoiceBox y Label de Avestruz
+            HBox avestruzLayout = new HBox(10); // Espacio de 10 píxeles entre los nodos
+            avestruzLayout.getChildren().addAll(avestruzLabel, avestruzChoiceBox);
+
+            // Crear el TabPane para las listas de koalas
+            tabPane = new TabPane();
+
+            // Crear el layout principal
+            VBox layout = new VBox(10); // Espacio de 10 píxeles entre los nodos
+            layout.getChildren().addAll(menuBar, avestruzLayout, tabPane);
+
+            // Crear la escena y añadir el layout principal
+            Scene scene = new Scene(layout, 600, 400);
+            primaryStage.setScene(scene);
+            primaryStage.show();
+
+            // Manejador de eventos para "Cargar" en el menú "Archivo"
+            cargarMenuItem.setOnAction(event -> cargarAvestruces());
+            salirMenuItem.setOnAction(event -> primaryStage.close());
+            mostrarDatosMenuItem.setOnAction(event -> mostrarDatosKoala());
+            eliminarMenuItem.setOnAction(event -> eliminarAvestruz());
+
+            // Manejador de eventos para la selección de una avestruz en el ChoiceBox
+            avestruzChoiceBox.setOnAction(event -> {
+                AvestruzDO selectedAvestruz = avestruzChoiceBox.getValue();
+                if (selectedAvestruz != null) {
+                    cargarListaKoalas(selectedAvestruz);
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void cargarAvestruces() {
+        avestruzChoiceBox.getItems().clear(); // Limpiar cualquier avestruz previamente cargada
+        loadAvestruzData(avestruzChoiceBox); // Cargar las avestruces desde la base de datos
+    }
+
+    private void loadAvestruzData(ChoiceBox<AvestruzDO> choiceBox) {
+        Connection connection = UtilsBD.conectarBD();
+        if (connection != null) {
+            try {
+                String query = "SELECT idAvestruz, Nombre, NickGuerra, Edad, Altura, NivelMalaLeche, NumHuevos FROM avestruz";
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(query);
+
+                List<AvestruzDO> avestruces = new ArrayList<>();
+                while (resultSet.next()) {
+                    AvestruzDO avestruz = new AvestruzDO(
+                            resultSet.getInt("idAvestruz"),
+                            resultSet.getString("Nombre"),
+                            resultSet.getString("NickGuerra"),
+                            resultSet.getInt("Edad"),
+                            resultSet.getInt("Altura"),
+                            resultSet.getInt("NivelMalaLeche"),
+                            resultSet.getInt("NumHuevos")
+                    );
+                    avestruces.add(avestruz);
+                }
+
+                choiceBox.getItems().addAll(avestruces);
+                resultSet.close();
+                statement.close();
+                connection.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("No se pudo establecer conexión con la base de datos.");
+        }
+    }
+
+    private void cargarListaKoalas(AvestruzDO avestruz) {
+        // Crear una nueva pestaña para la lista de koalas
+        Tab tab = new Tab(avestruz.getNombre() + " - Lista de Koalas");
+
+        // Obtener los datos de los koalas de la base de datos
+        List<KoalaDO> koalas = obtenerKoalasPorAvestruz(avestruz);
+
+        // Crear el VBox para mostrar la lista de koalas y botones de editar
+        VBox vBox = new VBox();
+        for (KoalaDO koala : koalas) {
+            Button editarButton = new Button("Editar");
+            editarButton.setOnAction(event -> {
+                // Aquí puedes agregar la lógica para editar el koala
+                System.out.println("Editando koala: " + koala.getNombre());
+            });
+            Label koalaLabel = new Label(koala.getNombre());
+            vBox.getChildren().addAll(koalaLabel, editarButton);
+        }
+
+        tab.setContent(vBox);
+        tabPane.getTabs().add(tab);
+    }
+
+    private List<KoalaDO> obtenerKoalasPorAvestruz(AvestruzDO avestruz) {
+        List<KoalaDO> koalas = new ArrayList<>();
+        Connection connection = UtilsBD.conectarBD();
+        if (connection != null) {
+            try {
+                String query = "SELECT idKoala, Nombre, NickGuerra, Edad, Color, Fuerza, Inteligencia, HorasSueno, TiempoBerserk, Avestruz_idAvestruz, CarritoGolf_idCarritoGolf FROM koala WHERE Avestruz_idAvestruz = " + avestruz.getIdAvestruz();
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(query);
+
+                while (resultSet.next()) {
+                    KoalaDO koala = new KoalaDO(
+                            resultSet.getInt("idKoala"),
+                            resultSet.getString("Nombre"),
+                            resultSet.getString("NickGuerra"),
+                            resultSet.getInt("Edad"),
+                            resultSet.getString("Color"),
+                            resultSet.getInt("Fuerza"),
+                            resultSet.getInt("Inteligencia"),
+                            resultSet.getInt("HorasSueno"),
+                            resultSet.getInt("TiempoBerserk"),
+                            resultSet.getInt("Avestruz_idAvestruz"),
+                            resultSet.getInt("CarritoGolf_idCarritoGolf")
+                    );
+                    koalas.add(koala);
+                }
+
+                resultSet.close();
+                statement.close();
+                connection.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("No se pudo establecer conexión con la base de datos.");
+        }
+        return koalas;
+    }
+
+    private void mostrarDatosKoala() {
+        Stage stage = new Stage();
+        stage.setTitle("Mostrar Datos del Koala");
+
+        VBox vBox = new VBox(10);
+        ChoiceBox<KoalaDO> koalaChoiceBox = new ChoiceBox<>();
+        Label datosLabel = new Label();
+
+        // Cargar los koalas en el ChoiceBox
+        cargarKoalas(koalaChoiceBox);
+
+        Button mostrarButton = new Button("Mostrar Datos");
+        mostrarButton.setOnAction(event -> {
+            KoalaDO selectedKoala = koalaChoiceBox.getValue();
+            if (selectedKoala != null) {
+                datosLabel.setText(selectedKoala.toString());
+            } else {
+                datosLabel.setText("No se ha seleccionado ningún koala.");
+            }
+        });
+
+        vBox.getChildren().addAll(new Label("Selecciona un Koala:"), koalaChoiceBox, mostrarButton, datosLabel);
+        Scene scene = new Scene(vBox, 400, 300);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private void cargarKoalas(ChoiceBox<KoalaDO> choiceBox) {
+        choiceBox.getItems().clear();
+        Connection connection = UtilsBD.conectarBD();
+        if (connection != null) {
+            try {
+                String query = "SELECT idKoala, Nombre, NickGuerra, Edad, Color, Fuerza, Inteligencia, HorasSueno, TiempoBerserk, Avestruz_idAvestruz, CarritoGolf_idCarritoGolf FROM koala";
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(query);
+
+                List<KoalaDO> koalas = new ArrayList<>();
+                while (resultSet.next()) {
+                    KoalaDO koala = new KoalaDO(
+                            resultSet.getInt("idKoala"),
+                            resultSet.getString("Nombre"),
+                            resultSet.getString("NickGuerra"),
+                            resultSet.getInt("Edad"),
+                            resultSet.getString("Color"),
+                            resultSet.getInt("Fuerza"),
+                            resultSet.getInt("Inteligencia"),
+                            resultSet.getInt("HorasSueno"),
+                            resultSet.getInt("TiempoBerserk"),
+                            resultSet.getInt("Avestruz_idAvestruz"),
+                            resultSet.getInt("CarritoGolf_idCarritoGolf")
+                    );
+                    koalas.add(koala);
+                }
+
+                choiceBox.getItems().addAll(koalas);
+                resultSet.close();
+                statement.close();
+                connection.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("No se pudo establecer conexión con la base de datos.");
+        }
+    }
+
+    private void eliminarAvestruz() {
+        AvestruzDO selectedAvestruz = avestruzChoiceBox.getValue();
+        if (selectedAvestruz != null) {
+            Connection connection = UtilsBD.conectarBD();
+            if (connection != null) {
+                try {
+                    String query = "DELETE FROM avestruz WHERE idAvestruz = " + selectedAvestruz.getIdAvestruz();
+                    Statement statement = connection.createStatement();
+                    statement.executeUpdate(query);
+                    statement.close();
+                    connection.close();
+
+                    avestruzChoiceBox.getItems().remove(selectedAvestruz);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("No se pudo establecer conexión con la base de datos.");
+            }
+        } else {
+            System.out.println("No se ha seleccionado ningún avestruz.");
+        }
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
